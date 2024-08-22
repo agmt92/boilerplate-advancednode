@@ -30,7 +30,8 @@ app.use(session({
   resave: true,
   saveUninitialized: true,
   store: store,
-  cookie: 'express.sid',
+  cookie: { secure: false },
+  key: 'express.sid',
   github: { clientID: process.env.GITHUB_CLIENT_ID, clientSecret: process.env.GITHUB_CLIENT_SECRET }
 }));
 
@@ -41,6 +42,8 @@ fccTesting(app); // For fCC testing purposes
 app.use('/public', express.static(process.cwd() + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
 
 myDB(async client => {
   const myDataBase = await client.db('database').collection('users');
