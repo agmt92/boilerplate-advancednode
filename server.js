@@ -85,13 +85,11 @@ io.on('connection', socket => {
   connected: true
 });
   console.log('user ' + socket.request.user.username + ' connected');
-  socket.on('user', data => {
-    $('#num-users').text(data.currentUsers + ' users online');
-    let message =
-      data.username +
-      (data.connected ? ' has joined the chat.' : ' has left the chat.');
-    $('#messages').append($('<li>').html('<b>' + message + '</b>'));
-  });
+  socket.on('user', () => {
+    --currentUsers;
+    io.emit('user count', currentUsers);
+    console.log('A user has disconnected');
+  });  
 });
   
 const PORT = process.env.PORT || 3000;
