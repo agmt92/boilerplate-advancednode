@@ -6,8 +6,8 @@ const fccTesting = require('./freeCodeCamp/fcctesting.js');
 const session = require('express-session');
 const passport = require('passport');
 const { ObjectID } = require('mongodb');
-const mongoose = require('mongoose');
 const LocalStrategy = require('passport-local');
+const bcrypt = require('bcrypt');
 
 const app = express();
 
@@ -39,111 +39,23 @@ myDB(async client => {
       showLogin: true,
       showRegistration: true
     });
-    app.use((req, res, next) => {
-      res.status(404)
-        .type('text')
-        .send('Not Found');
-    });
   });
 
-  passport.serializeUser((user, done) => {
-    done(null, user._id);
-  });
-  
-  passport.deserializeUser((id, done) => {
-    myDataBase.findOne({ _id: new ObjectID(id) }, (err, doc) => {
-      done(null, doc);
-    });
+  app.route('/login').post(passport.authenticate('local', { failureRedirect: '/' }), (req, res) => {
+    res.redirect('/profile');
   });
 
-}).catch(e => {
-  app.route('/').get((req, res) => {
-    res.render('index', { title: e, message: 'Unable to connect to database' });
-    app.use((req, res, next) => {
-      res.status(404)
-        .type('text')
-        .send('Not Found');
-    });
-    app.use((req, res, next) => {
-      res.status(404)
-        .type('text')
-        .send('Not Found');
-    });
+  app.route('/profile').get(ensureAuthenticated, (req,res) => {
+    res.render('profile', { username: req.user.username });
   });
-});
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
-
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function() {
-  console.log('Connected to MongoDB');
-});
-
-// Define User Schema
-const userSchema = new mongoose.Schema({
-  username: String, 
-  password: String
-});
-
-const User = mongoose.model('User', userSchema);
-
-passport.use(new LocalStrategy((username, password, done) => {
-  myDataBase.findOne({ username: username }, (err, user) => {
-    console.log(`User ${username} attempted to log in.`);
-    if (err) return done(err);
-    if (!user) return done(null, false);
-    if (password !== user.password) return done(null, false);
-    return done(null, user);
-  });
-}));
-
-app.route('/login').post(passport.authenticate('local', { failureRedirect: '/' }), (req, res) => {
-  res.redirect('/profile');
-  app.use((req, res, next) => {
-    res.status(404)
-      .type('text')
-      .send('Not Found');
-  });
-});
-
-
-// ensure user is authenticated
-
-const ensureAuthenticated = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  res.redirect('/');
-};
-
-app.route('/profile').get(ensureAuthenticated, (req, res) => {
-  res.render(process.cwd() + '/views/pug/profile', { username: req.user.username });
-  app.use((req, res, next) => {
-    res.status(404)
-      .type('text')
-      .send('Not Found');
-  });
-});
-
-app.route('/logout')
-  .get((req, res) => {
+  app.route('/logout').get((req, res) => {
     req.logout();
     res.redirect('/');
-    app.use((req, res, next) => {
-      res.status(404)
-        .type('text')
-        .send('Not Found');
-    });
-});
+  });
 
-
-app.route('/register')
-  .post((req, res, next) => {
+  app.route('/register').post((req, res, next) => {
+    const hash = bcrypt.hashSync(req.body.password, 12);
     myDataBase.findOne({ username: req.body.username }, (err, user) => {
       if (err) {
         next(err);
@@ -152,7 +64,7 @@ app.route('/register')
       } else {
         myDataBase.insertOne({
           username: req.body.username,
-          password: req.body.password
+          password: hash
         },
           (err, doc) => {
             if (err) {
@@ -173,9 +85,48 @@ app.route('/register')
     }
   );
 
+  app.use((req, res, next) => {
+    res.status(404)
+      .type('text')
+      .send('Not Found');
+  });
+
+  passport.use(new LocalStrategy((username, password, done) => {
+    myDataBase.findOne({ username: username }, (err, user) => {
+      console.log(`User ${username} attempted to log in.`);
+      if (err) { return done(err); }
+      if (!user) { return done(null, false); }
+      if (!bcrypt.compareSync(password, user.password)) { 
+          return done(null, false);
+      }
+      return done(null, user);
+    });
+  }));
+
+  passport.serializeUser((user, done) => {
+    done(null, user._id);
+  });
+  
+  passport.deserializeUser((id, done) => {
+    myDataBase.findOne({ _id: new ObjectID(id) }, (err, doc) => {
+      done(null, doc);
+    });
+  });
+
+}).catch(e => {
+  app.route('/').get((req, res) => {
+    res.render('index', { title: e, message: 'Unable to connect to database' });
+  });
+});
+
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect('/');
+};
   
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
-}
-);
+});
