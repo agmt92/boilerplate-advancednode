@@ -90,6 +90,9 @@ io.on('connection', socket => {
     io.emit('user count', currentUsers);
     console.log('A user has disconnected');
   });  
+  socket.on('chat message', (message) => {
+    io.emit('chat message', { name: socket.request.user.username, message });
+  });
 });
   
 const PORT = process.env.PORT || 3000;
