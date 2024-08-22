@@ -13,7 +13,7 @@ $(document).ready(function () {
     $('#messages').append($('<li>').html('<b>' + message + '</b>'));
   });
   socket.on('chat message', (data) => {
-    $('#messages').append($('<li>').text(data.name + ': ' + data.message));
+    $('#messages').append($('<li>').text(data.username + ': ' + data.message));
   });
   $('form').submit( () => {
     let messageToSend = $('#m').val();
