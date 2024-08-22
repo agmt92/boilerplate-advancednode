@@ -14,13 +14,24 @@ module.exports = function (app, myDB) {
           showSocialAuth: true
         });
       });
+      function ensureAuthenticated(req, res, next) {
+        if (req.isAuthenticated()) {
+          return next();
+        }
+        res.redirect('/');
+      };
 
       app.route('/auth/github').get(passport.authenticate('github'));
 
       app.route('/auth/github/callback').
         get(passport.authenticate('github', { failureRedirect: '/' }), (req, res) => {
-          res.redirect('/profile');
+          req.session.user_id = req.user.id;
+          res.redirect('/chat');
         });
+
+      app.route('/chat').get(ensureAuthenticated, (req, res) => {
+        res.render('chat.pug', { user: req.user })
+      });
     
       app.route('/logout').get((req, res) => {
         req.logout();

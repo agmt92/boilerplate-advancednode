@@ -9,6 +9,14 @@ const myDB = require('./connection');
 module.exports = function (app, myDataBase) {
     console.log('auth.js loaded');
 
+
+    function ensureAuthenticated(req, res, next) {
+      if (req.isAuthenticated()) {
+        return next();
+      }
+      res.redirect('/');
+    };
+    
     app.route('/login').post(passport.authenticate('local', { failureRedirect: '/' }), (req, res) => {
         res.redirect('/profile');
       });
@@ -93,11 +101,6 @@ module.exports = function (app, myDataBase) {
         });
       });
 
-      function ensureAuthenticated(req, res, next) {
-        if (req.isAuthenticated()) {
-          return next();
-        }
-        res.redirect('/');
-      };
+     
 
 }
