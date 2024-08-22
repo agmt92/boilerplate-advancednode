@@ -40,9 +40,8 @@ app.use(express.urlencoded({ extended: true }));
 myDB(async client => {
   const myDataBase = await client.db('database').collection('users');
   console.log('Connected to database');
-  routes(app, myDB);
-  auth(app, myDB);
-
+  routes(app, myDataBase);
+  auth(app, myDataBase);
 }).catch(e => {
   app.route('/').get((req, res) => {
     res.render('index', { title: e, message: 'Unable to connect to database' });
