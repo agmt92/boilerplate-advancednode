@@ -77,15 +77,13 @@ let currentUsers = 0;
 io.on('connection', socket => {
   ++currentUsers;
   io.emit('user count', currentUsers);
-  console.log('A user has connected');
+  console.log('user ' + socket.request.user.username + ' connected');
   socket.on('disconnect', () => {
     --currentUsers;
     io.emit('user count', currentUsers);
     console.log('A user has disconnected');
   });  
 });
-
-console.log('user ' + socket.request.user.username + ' connected');
   
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () => {
