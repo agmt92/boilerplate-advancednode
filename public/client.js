@@ -12,10 +12,12 @@ $(document).ready(function () {
       (data.connected ? ' has joined the chat.' : ' has left the chat.');
     $('#messages').append($('<li>').html('<b>' + message + '</b>'));
   });
-  $('form').submit(function () {
+  socket.on('chat message', (data) => {
+    $('#messages').append($('<li>').text(data.name + ': ' + data.message));
+  });
+  $('form').submit( () => {
     let messageToSend = $('#m').val();
     socket.emit('chat message', messageToSend);
-    
     $('#m').val('');
     return false; // prevent form submit from refreshing page
   });
