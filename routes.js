@@ -14,6 +14,13 @@ module.exports = function (app, myDB) {
           showSocialAuth: true
         });
       });
+
+      app.route('/auth/github').get(passport.authenticate('github'));
+
+      app.route('/auth/github/callback').
+        get(passport.authenticate('github', { failureRedirect: '/' }), (req, res) => {
+          res.redirect('/profile');
+        });
     
       app.route('/logout').get((req, res) => {
         req.logout();
