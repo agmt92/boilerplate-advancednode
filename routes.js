@@ -10,7 +10,8 @@ module.exports = function (app, myDB) {
           title: 'Connected to Database',
           message: 'Please log in',
           showLogin: true,
-          showRegistration: true
+          showRegistration: true,
+          showSocialAuth: true
         });
       });
     
