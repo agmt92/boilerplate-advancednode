@@ -1,4 +1,4 @@
-const env = require('dotenv').config();
+require('dotenv').config();
 const passport = require('passport');
 const bcrypt = require('bcrypt');
 const GitHubStrategy = require('passport-github').Strategy;
@@ -53,9 +53,9 @@ module.exports = function (app, myDataBase) {
         clientSecret: process.env.GITHUB_CLIENT_SECRET,
         callbackURL: 'https://advancednode-dc718f6236d0.herokuapp.com/auth/github/callback'
 },
-      function(accessToken, refreshToken, profile, cb) {
+      (accessToken, refreshToken, profile, cb) => {
         console.log(profile);
-        myDB.findOneAndUpdate(
+        myDataBase.findOneAndUpdate(
           { id: profile.id },
           {
             $setOnInsert: {
